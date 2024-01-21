@@ -1,0 +1,91 @@
+Poroject title > Visit Logs : Ensuring Secure and Smooth Employee Visit Tracking
+
+Problem Statement  >
+In ABC Ltd, employees are permitted to log in only once per day using their email addresses. However, a loophole has been identified in the system 
+wherein employees exploit this rule by utilizing various email IDs to log in multiple times. 
+
+ABC Ltd, is now seeking to understand the extent of this issue, specifically wanting to know the number of employees engaging in multiple logins and
+which floors they predominantly visit. The company aims to gain insights into employee behavior to address this matter effectively.
+
+# Step 1 
+Ctreating table in SQL working bench.
+
+(  creating tables in SQL Workbench is essential for organizing, maintaining, and retrieving data in a structured and efficient manner within a 
+relational database system. It lays the foundation for robust and scalable data management.)
+
+SQL query >
+
+  CREATE TABLE ENTRIES (
+  ENTRY_DATE DATE DEFAULT NULL,
+  NAME VARCHAR(100) DEFAULT NULL,
+  ADDRESS VARCHAR(100) DEFAULT NULL,
+  EMAIL VARCHAR(100) DEFAULT NULL,
+  FLOOR INT DEFAULT NULL,
+  RESOURCES VARCHAR(100) DEFAULT NULL
+
+# Step 2 
+Insert data into the table.
+
+SQL query >
+
+ INSERT INTO ENTRIES 
+  VALUES 
+  ('19/01/2024','SAM','PUNE','SAM@GMAIL.COM','1','CPU'),
+    ('19/01/2024','SAM','PUNE','SAM@YAHOO.COM','1','CPU'),
+      ('19/01/2024','SAM','PUNE','SAM@HOTMAIL.COM','2','DESKTOP'),
+        ('19/01/2024','RON','PUNE','SAM@GMAIL.COM','1','CPU'),
+          ('19/01/2024','RON','PUNE','SAM@YAHOO.COM','2','DESKTOP'),
+            ('19/01/2024','RON','PUNE','SAM2@GMAIL.COM','2','DESKTOP');
+
+# Step 3 
+Solution to the given problem statement.
+
+SQL query >
+
+WITH DISTINCT_RESOURCES
+AS (
+    SELECT DISTINCT NAME
+        ,RESOURCES
+    FROM ENTRIES
+    )
+    ,AGG_RESOURCES
+AS (
+    SELECT NAME
+        ,GROUP_CONCAT(RESOURCES, ',') AS USED_RESOURCES
+    FROM DISTINCT_RESOURCES
+    GROUP BY NAME
+    )
+    ,TOTAL_VISITS
+AS (
+    SELECT NAME
+        ,COUNT(1) AS TOTAL_VISITS
+        ,GROUP_CONCAT(RESOURCES, ',') AS RESOURCES_USED
+    FROM ENTRIES
+    GROUP BY NAME
+    )
+    ,FLOOR_VISIT
+AS (
+    SELECT NAME
+        ,FLOOR
+        ,COUNT(1) AS NO_OF_FLOORS_VISITED
+        ,RANK() OVER (
+            PARTITION BY NAME ORDER BY COUNT(1) DESC
+            ) AS RN
+    FROM ENTRIES
+    GROUP BY NAME
+        ,FLOOR
+    )
+SELECT FV.NAME
+    ,FV.FLOOR AS MOST_VISITED_FLOOR
+    ,TV.TOTAL_VISITS
+    ,AR.USED_RESOURCES
+FROM FLOOR_VISIT FV
+INNER JOIN TOTAL_VISITS TV ON FV.NAME = TV.NAME
+INNER JOIN AGG_RESOURCES AR ON FV.NAME = AR.NAME
+WHERE RN = 1;
+
+# Online SQL editor > 
+https://www.programiz.com/sql/online-compiler/
+
+
+
